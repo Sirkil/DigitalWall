@@ -5,25 +5,24 @@
         body { 
             margin: 0; 
             overflow: hidden; 
-            background: transparent; 
+            background: black; 
             height: 100vh;
             width: 100vw;
         }
 
-        #name-display {
+        .name-overlay {
             position: absolute;
             white-space: nowrap;
             font-family: 'Arial Black', sans-serif;
-            font-size: 80px;
+            font-size: 60px; 
             color: #ffffff;
             text-shadow: 4px 4px 15px rgba(0,0,0,0.8);
-            visibility: hidden;
-            /* Smooth transition for random movement */
-            transition: all 3s ease-in-out; 
+            transition: all 4s ease-in-out; 
             display: inline-block;
+            pointer-events: none; 
+            opacity: 0;
         }
 
-        /* Pop-in Animation */
         @keyframes popIn {
             0% { transform: scale(0); opacity: 0; }
             70% { transform: scale(1.2); opacity: 1; }
@@ -31,21 +30,15 @@
         }
 
         .animate-pop {
-            visibility: visible !important;
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
     </style>
 </head>
 <body>
 
-    <div id="name-display"></div>
-
     <script>
-        // Use your specific script URL
         const scriptUrl = 'https://script.google.com/macros/s/AKfycbxQWJZfVkxk8BczyxgMThIf3EyTSFPkfGfZkb26tt4UVYdPeEuZIViK0Lrz6vPK-nsc/exec';
         let lastProcessedName = "";
-        let movementInterval;
-        const displayDiv = document.getElementById('name-display');
 
         async function checkForNewName() {
             try {
@@ -54,48 +47,37 @@
 
                 if (currentName !== lastProcessedName && currentName.trim() !== "") {
                     lastProcessedName = currentName;
-                    startNameSequence(currentName);
+                    createNewNameElement(currentName);
                 }
             } catch (error) {
                 console.error("Connection Error:", error);
             }
         }
 
-        function startNameSequence(name) {
-            // 1. Reset everything
-            clearInterval(movementInterval);
-            displayDiv.classList.remove('animate-pop');
-            displayDiv.innerText = name;
-            
-            // 2. Initial Position (Center)
-            displayDiv.style.top = "45%";
-            displayDiv.style.left = "40%";
-            
-            // 3. Trigger Pop
-            void displayDiv.offsetWidth; 
-            displayDiv.classList.add('animate-pop');
+        function createNewNameElement(name) {
+            const nameEl = document.createElement('div');
+            nameEl.className = 'name-overlay animate-pop';
+            nameEl.innerText = name;
+            document.body.appendChild(nameEl);
 
-            // 4. Start Random Movement after pop
-            movementInterval = setInterval(moveRandomly, 3000);
+            // Initial random position
+            const startX = Math.random() * (window.innerWidth - 300);
+            const startY = Math.random() * (window.innerHeight - 100);
+            nameEl.style.left = startX + 'px';
+            nameEl.style.top = startY + 'px';
 
-            // 5. Hide after 1 minute (60,000ms)
-            setTimeout(() => {
-                displayDiv.classList.remove('animate-pop');
-                displayDiv.style.visibility = "hidden";
-                clearInterval(movementInterval);
-            }, 60000);
-        }
+            // Continuous movement - no clearInterval means this runs forever
+            setInterval(() => {
+                const maxX = window.innerWidth - nameEl.offsetWidth - 50;
+                const maxY = window.innerHeight - nameEl.offsetHeight - 50;
 
-        function moveRandomly() {
-            // Calculate safe boundaries so name stays on screen
-            const maxX = window.innerWidth - displayDiv.offsetWidth - 50;
-            const maxY = window.innerHeight - displayDiv.offsetHeight - 50;
+                const randomX = Math.max(50, Math.floor(Math.random() * maxX));
+                const randomY = Math.max(50, Math.floor(Math.random() * maxY));
 
-            const randomX = Math.max(50, Math.floor(Math.random() * maxX));
-            const randomY = Math.max(50, Math.floor(Math.random() * maxY));
-
-            displayDiv.style.left = randomX + "px";
-            displayDiv.style.top = randomY + "px";
+                nameEl.style.left = randomX + "px";
+                nameEl.style.top = randomY + "px";
+            }, 4000);
+        
         }
 
         setInterval(checkForNewName, 5000);
