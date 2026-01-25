@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: transparent; 
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #name-display {
+            position: absolute;
+            white-space: nowrap;
+            font-family: 'Arial Black', sans-serif;
+            font-size: 80px;
+            color: #ffffff;
+            text-shadow: 4px 4px 15px rgba(0,0,0,0.8);
+            visibility: hidden;
+            /* Smooth transition for random movement */
+            transition: all 3s ease-in-out; 
+            display: inline-block;
+        }
+
+        /* Pop-in Animation */
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-pop {
+            visibility: visible !important;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="name-display"></div>
+
+    <script>
+        // Use your specific script URL
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbxQWJZfVkxk8BczyxgMThIf3EyTSFPkfGfZkb26tt4UVYdPeEuZIViK0Lrz6vPK-nsc/exec';
+        let lastProcessedName = "";
+        let movementInterval;
+        const displayDiv = document.getElementById('name-display');
+
+        async function checkForNewName() {
+            try {
+                const response = await fetch(scriptUrl);
+                const currentName = await response.text();
+
+                if (currentName !== lastProcessedName && currentName.trim() !== "") {
+                    lastProcessedName = currentName;
+                    startNameSequence(currentName);
+                }
+            } catch (error) {
+                console.error("Connection Error:", error);
+            }
+        }
+
+        function startNameSequence(name) {
+            // 1. Reset everything
+            clearInterval(movementInterval);
+            displayDiv.classList.remove('animate-pop');
+            displayDiv.innerText = name;
+            
+            // 2. Initial Position (Center)
+            displayDiv.style.top = "45%";
+            displayDiv.style.left = "40%";
+            
+            // 3. Trigger Pop
+            void displayDiv.offsetWidth; 
+            displayDiv.classList.add('animate-pop');
+
+            // 4. Start Random Movement after pop
+            movementInterval = setInterval(moveRandomly, 3000);
+
+            // 5. Hide after 1 minute (60,000ms)
+            setTimeout(() => {
+                displayDiv.classList.remove('animate-pop');
+                displayDiv.style.visibility = "hidden";
+                clearInterval(movementInterval);
+            }, 60000);
+        }
+
+        function moveRandomly() {
+            // Calculate safe boundaries so name stays on screen
+            const maxX = window.innerWidth - displayDiv.offsetWidth - 50;
+            const maxY = window.innerHeight - displayDiv.offsetHeight - 50;
+
+            const randomX = Math.max(50, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(50, Math.floor(Math.random() * maxY));
+
+            displayDiv.style.left = randomX + "px";
+            displayDiv.style.top = randomY + "px";
+        }
+
+        setInterval(checkForNewName, 5000);
+    </script>
+</body>
+</html>
