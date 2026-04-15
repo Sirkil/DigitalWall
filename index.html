@@ -1,255 +1,233 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allergy Care Registration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            background-image: url('assets/BG.jpg'); 
-            background-size: cover;
-            background-position: center;
+        :root {
+            --dark-purple: #5a2d82;
+            --accent-gradient: linear-gradient(90deg, #9b51e0 0%, #c0392b 100%);
+        }
+
+        body {
+            margin: 0;
+            padding: 2rem 1rem; /* Padding prevents content from touching the edges */
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            background-color: #9d6fc1; 
+            background-image: url('https://raw.githubusercontent.com/Sirkil/TelfastConset_LeadCapture/main/Telfastbg.jpg');
             background-repeat: no-repeat;
-            background-color: #0b0b2a; 
-            height: 100vh;
-            width: 100vw;
-            font-family: 'Arial Black', sans-serif;
-        }
-
-        .name-wrapper {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            z-index: 20;
-        }
-
-        /* The Grid Visualizer */
-        .grid-slot {
-            position: absolute;
-            background-color: rgba(255, 0, 0, 0.3); /* Semi-transparent red */
-            border: 1px solid red;                  
-            opacity: 1; /* Change to 0 to hide later! */
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* The Box that holds the name */
-        .name-overlay {
-            position: absolute;
+            background-position: center center;
+            background-attachment: fixed;
+            background-size: cover;
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            /* Allow scrolling if content is taller than the screen */
+            justify-content: flex-start; 
+            color: white;
+            text-align: center;
+        }
+
+        /* Wraps the content to center it safely */
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: #ffffff; 
-            text-transform: uppercase;
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 
-                         0 0 10px rgba(0, 150, 255, 0.8),
-                         0 0 20px rgba(160, 32, 240, 0.8);
-            
-            left: 0;
-            top: 0;
-            transform: translate(-50%, -50%) scale(0) rotate(0deg);
-            opacity: 0;
-            pointer-events: none; 
+            width: 100%;
+            max-width: 600px;
+            margin: auto; 
         }
 
-        /* The actual text inside the box */
-        .name-text {
-            white-space: nowrap;
-            font-size: 42px;
-            transform-origin: center center;
+        .header-content { width: 100%; margin-bottom: 2rem; }
+        
+        .brand-logo {
+            width: 100%;
+            max-width: 250px;
+            height: auto; /* Fixed height issue for responsiveness */
+            display: block;
+            margin: 0 auto 1.5rem auto;
         }
 
-        .state-grow {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(2.5) rotate(0deg);
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease-out;
-            z-index: 100;
+        h1 { font-size: 3rem; margin: 0; font-weight: 600; line-height: 1.1; }
+        h1 span { display: block; font-weight: 300; font-size: 2.8rem; }
+        .sub-header { font-size: 1.2rem; margin-top: 1.5rem; opacity: 0.9; }
+
+        .features-list { list-style: none; padding: 0; margin: 1.5rem 0; text-align: left; display: inline-block; width: 100%; box-sizing: border-box; }
+        .feature-item { display: flex; align-items: flex-start; margin-bottom: 12px; font-size: 1.1rem; }
+        .check-icon { background: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; margin-top: 2px;}
+
+        .card { background: white; color: #333; width: 100%; max-width: 480px; padding: 35px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); box-sizing: border-box; }
+        .card p { font-size: 20px; color: var(--dark-purple); margin-top: 0px;}
+
+        input[type="email"] { width: 100%; padding: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 1.1rem; margin-bottom: 15px; box-sizing: border-box; }
+        
+        .btn-next { width: 100%; padding: 15px; background: var(--accent-gradient); color: white; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: opacity 0.2s; }
+        .btn-next:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .privacy-note { display: flex; align-items: flex-start; text-align: left; margin-top: 20px; font-size: 0.85rem; color: #666; border-top: 1px solid #eee; padding-top: 15px; }
+        .privacy-note svg { margin-right: 10px; flex-shrink: 0; }
+        footer { margin-top: 2rem; font-size: 0.9rem; opacity: 0.8; padding-bottom: 20px; width: 100%; }
+
+        /* --- Custom Dialog Styles --- */
+        #dialogOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
         }
 
-        .state-move {
-            opacity: 1;
-            z-index: 20;
-            transition: left 4s cubic-bezier(0.25, 1, 0.5, 1), 
-                        top 4s cubic-bezier(0.25, 1, 0.5, 1),
-                        transform 4s cubic-bezier(0.25, 1, 0.5, 1);
+        .dialog-container {
+            background: #f4f0f6;
+            color: #333;
+            width: 100%;
+            max-width: 380px;
+            padding: 24px;
+            border-radius: 28px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
-        /* Smoothly fades out old names when they are replaced */
-        .state-fade-out {
-            opacity: 0 !important;
-            transition: opacity 0.5s ease-out !important;
+        .hero-icon { display: inline-block; margin-bottom: 16px; color: #5a2d82; }
+        .dialog-title { font-size: 1.5rem; font-weight: 500; margin-bottom: 12px; color: #1c1b1f; }
+        .dialog-body { font-size: 0.95rem; color: #535353; line-height: 1.5; margin-bottom: 24px; }
+        .dialog-actions { display: flex; justify-content: flex-end; gap: 16px; }
+        .action-btn { background: none; border: none; color: #6750a4; font-weight: 600; font-size: 1rem; cursor: pointer; padding: 8px; }
+
+        /* --- MOBILE RESPONSIVENESS (Media Queries) --- */
+        @media (max-width: 480px) {
+            body { padding: 1.5rem 1rem; }
+            h1 { font-size: 2.2rem; }
+            h1 span { font-size: 2rem; }
+            .sub-header { font-size: 1.05rem; }
+            .card { padding: 25px 20px; }
+            .card p { font-size: 17px; }
+            .feature-item { font-size: 1rem; }
+            input[type="email"] { padding: 12px; font-size: 1rem; }
+            .btn-next { padding: 12px; font-size: 1.1rem; }
         }
     </style>
 </head>
 <body>
 
-    <div id="nameWrapper" class="name-wrapper"></div>
+    <div class="page-wrapper">
+        <div class="header-content">
+            <img src="https://raw.githubusercontent.com/Sirkil/TelfastConset_LeadCapture/main/Telfast_Logo.png" alt="Brand Logo" class="brand-logo">
+            <h1>Stay Ahead <span>in Allergy Care</span></h1>
+            <p class="sub-header">Register now to receive exclusive updates on</p>
+            <ul class="features-list">
+                <li class="feature-item"><span class="check-icon"><svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5L5 9L13 1" stroke="#9d6fc1" stroke-width="2.5" stroke-linecap="round"/></svg></span> Premium & Accredited Allergy Summits in KSA</li>
+                <li class="feature-item"><span class="check-icon"><svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5L5 9L13 1" stroke="#9d6fc1" stroke-width="2.5" stroke-linecap="round"/></svg></span> Global & Regional Frontiers</li>
+                <li class="feature-item"><span class="check-icon"><svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5L5 9L13 1" stroke="#9d6fc1" stroke-width="2.5" stroke-linecap="round"/></svg></span> Breaking Science in Antihistamine Research</li>
+            </ul>
+        </div>
 
-    <script>
-        const scriptUrl = 'https://script.google.com/macros/s/AKfycbxB5RPNS-JYkdSAqt-fEFrOzfE0LUvEBkS6octQoRbVctPRV2nq8Xpy2gziNNp1WH74/exec';
-        let lastProcessedName = "";
-        
-        const maxNames = 100; 
-        const nameWrapper = document.getElementById('nameWrapper'); 
-        const slotData = [];
-        let activeElements = []; 
-        
-        let availableSlots = Array.from({length: maxNames}, (_, i) => i);
-        // Shuffle the slots so names appear randomly
-        for (let i = availableSlots.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [availableSlots[i], availableSlots[j]] = [availableSlots[j], availableSlots[i]];
+        <div class="card">
+            <p>Enter your email to begin, follow the next steps to complete your process</p>
+            <input type="email" id="userEmail" placeholder="yourname@email.com">
+            <button id="nextBtn" class="btn-next">Next &rarr;</button>
+
+            <div class="privacy-note">
+                <svg width="18" height="20" viewBox="0 0 18 20" fill="none"><rect x="1" y="8" width="16" height="11" rx="2" stroke="#5a2d82" stroke-width="2"/><path d="M5 8V5C5 2.79086 6.79086 1 9 1C11.2091 1 13 2.79086 13 5V8" stroke="#5a2d82" stroke-width="2"/></svg>
+                Your information is secure and will be used only for professional medical communications.
+            </div>
+        </div>
+
+        <footer>For Healthcare Professionals only</footer>
+    </div>
+
+    <div id="dialogOverlay">
+        <div class="dialog-container">
+            <div class="hero-icon">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><path d="M12 18h.01"></path><path d="m9 10 2 2 4-4"></path></svg>
+            </div>
+            <div class="dialog-title">Already Registered</div>
+            <div class="dialog-body">
+                This email is already registered in our system. Please use a different email or contact support if you believe this is an error.
+            </div>
+            <div class="dialog-actions">
+                <button id="closeDialogBtn" class="action-btn">Okay</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+    const API_KEY = "6c3b6aea1525c0c290966ea4124a3425";
+    const CHECK_FORM_ID_1 = "253212443623953"; 
+    const CHECK_FORM_ID_2 = "260242705381956"; 
+    const REDIRECT_URL = "https://form.jotform.com/260242705381956";
+
+    function closeDialog() {
+        document.getElementById('dialogOverlay').style.display = 'none';
+    }
+
+    function showDialog() {
+        document.getElementById('dialogOverlay').style.display = 'flex';
+    }
+
+    function emailExistsInSubmissions(data, emailValue) {
+        if (data.responseCode === 200 && data.content) {
+            return data.content.some(submission => {
+                return Object.values(submission.answers).some(field => {
+                    return field.answer && field.answer.toString().toLowerCase() === emailValue;
+                });
+            });
+        }
+        return false;
+    }
+
+    async function checkEmail() {
+        const emailInput = document.getElementById('userEmail');
+        const emailValue = emailInput.value.trim().toLowerCase();
+        const btn = document.getElementById('nextBtn');
+
+        if (!emailValue || !emailValue.includes('@')) {
+            alert("Please enter a valid email address.");
+            return;
         }
 
-        // ==========================================
-        // 2. GENERATE PERFECT GRID & SKIP TOP 5 INNER
-        // ==========================================
-        function createGrid() {
-            const rows = 11; // 11 rows to stretch across the screen
-            const cols = 5;  // 5 uniform columns
-            
-            const halfWidth = window.innerWidth / 2;
-            const halfHeight = window.innerHeight / 2;
+        btn.disabled = true;
+        btn.innerText = "Checking...";
 
-            const minX = 260; // Inner edge (near QR/Text)
-            const maxX = halfWidth - 100; // Outer edge (with margin)
-            
-            const minY = -halfHeight + 60; // Top of screen
-            const maxY = halfHeight - 60;  // Bottom of screen
+        try {
+            const [response1, response2] = await Promise.all([
+                fetch(`https://api.jotform.com/form/${CHECK_FORM_ID_1}/submissions?apiKey=${API_KEY}&limit=1000`),
+                fetch(`https://api.jotform.com/form/${CHECK_FORM_ID_2}/submissions?apiKey=${API_KEY}&limit=1000`)
+            ]);
 
-            const stepX = (maxX - minX) / (cols - 1);
-            const stepY = (maxY - minY) / (rows - 1);
+            const data1 = await response1.json();
+            const data2 = await response2.json();
 
-            const uniformBoxWidth = stepX * 0.85;  
-            const uniformBoxHeight = stepY * 0.80; 
+            const foundInForm1 = emailExistsInSubmissions(data1, emailValue);
+            const foundInForm2 = emailExistsInSubmissions(data2, emailValue);
 
-            let slotIndex = 0;
-
-            // side 0 is Right, side 1 is Left
-            for (let side = 0; side < 2; side++) {
-                const isRightSide = (side === 0);
-                
-                for (let col = 0; col < cols; col++) {
-                    for (let row = 0; row < rows; row++) {
-                        
-                        // --- THE MAGIC LOGIC ---
-                        // If it is the innermost column (col 0) AND one of the top 5 rows (row 0 to 4)...
-                        // We skip it so it doesn't cover "UNITED FOR IMPACT"
-                        if (col === 0 && row < 5) {
-                            continue; 
-                        }
-
-                        if (slotIndex >= maxNames) break; // Safety check
-
-                        let finalX = minX + (col * stepX);
-                        let finalY = minY + (row * stepY);
-
-                        if (!isRightSide) { finalX = -finalX; }
-
-                        let angleRad = Math.atan2(finalY, finalX);
-                        let angleDeg = angleRad * (180 / Math.PI);
-
-                        // Keep text upright
-                        if (angleDeg > 90 || angleDeg < -90) { angleDeg += 180; }
-
-                        // Save dimensions 
-                        slotData[slotIndex] = { x: finalX, y: finalY, angle: angleDeg, w: uniformBoxWidth, h: uniformBoxHeight };
-
-                        // Draw the visual red box
-                        const boxEl = document.createElement('div');
-                        boxEl.className = 'grid-slot';
-                        boxEl.style.width = uniformBoxWidth + "px";
-                        boxEl.style.height = uniformBoxHeight + "px";
-                        boxEl.style.left = finalX + "px";
-                        boxEl.style.top = finalY + "px";
-                        boxEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg)`;
-                        nameWrapper.appendChild(boxEl);
-                        
-                        slotIndex++; // Move to the next spot
-                    }
-                }
-            }
-        }
-
-        createGrid();
-
-        // ==========================================
-        // 3. FETCH AND RESIZE NAMES TO FIT (WITH REPLACEMENT LOGIC)
-        // ==========================================
-        async function checkForNewName() {
-            try {
-                const response = await fetch(scriptUrl);
-                const currentName = await response.text();
-
-                if (currentName !== lastProcessedName && currentName.trim() !== "") {
-                    lastProcessedName = currentName;
-                    createNewNameElement(currentName);
-                }
-            } catch (error) {
-                console.error("Connection Error:", error);
-            }
-        }
-
-        function createNewNameElement(name) {
-            let usedSlotIndex;
-
-            if (availableSlots.length > 0) {
-                usedSlotIndex = availableSlots.pop();
+            if (foundInForm1 || foundInForm2) {
+                showDialog();
+                btn.disabled = false;
+                btn.innerText = "Next \u2192";
             } else {
-                // If 100 spots are full, remove the oldest name
-                const oldestItem = activeElements.shift(); 
-                usedSlotIndex = oldestItem.slotIndex;      
-
-                oldestItem.el.classList.add('state-fade-out');
-                
-                setTimeout(() => {
-                    if(oldestItem.el.parentNode) {
-                        oldestItem.el.parentNode.removeChild(oldestItem.el);
-                    }
-                }, 500); 
+                window.location.href = `${REDIRECT_URL}?email=${encodeURIComponent(emailValue)}`;
             }
-
-            const destination = slotData[usedSlotIndex];
-
-            const nameEl = document.createElement('div');
-            nameEl.className = 'name-overlay';
-            nameEl.style.width = destination.w + "px";
-            nameEl.style.height = destination.h + "px";
             
-            const textEl = document.createElement('span');
-            textEl.className = 'name-text';
-            textEl.innerText = name;
-            
-            nameEl.appendChild(textEl);
-            nameWrapper.appendChild(nameEl);
-
-            activeElements.push({ el: nameEl, slotIndex: usedSlotIndex });
-            
-            void nameEl.offsetWidth; 
-
-            // Scale text down if it's too long
-            const textWidth = textEl.offsetWidth;
-            const maxAllowedWidth = destination.w * 0.95; 
-            
-            if (textWidth > maxAllowedWidth) {
-                const scaleDownRatio = maxAllowedWidth / textWidth;
-                textEl.style.transform = `scale(${scaleDownRatio})`;
-            }
-
-            nameEl.classList.add('state-grow');
-
-            setTimeout(() => {
-                nameEl.classList.remove('state-grow');
-                nameEl.classList.add('state-move');
-
-                nameEl.style.left = destination.x + "px";
-                nameEl.style.top = destination.y + "px";
-                nameEl.style.transform = `translate(-50%, -50%) scale(1) rotate(${destination.angle}deg)`;
-            }, 1500); 
+        } catch (error) {
+            console.error("Verification failed:", error);
+            alert("We couldn't verify your registration. Please try again later.");
+            btn.disabled = false;
+            btn.innerText = "Next \u2192";
         }
+    }
 
-        setInterval(checkForNewName, 1000);
+    // Attach Event Listeners safely inside the module
+    document.getElementById('nextBtn').addEventListener('click', checkEmail);
+    document.getElementById('closeDialogBtn').addEventListener('click', closeDialog);
     </script>
 </body>
 </html>
