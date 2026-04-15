@@ -5,41 +5,178 @@
         body { 
             margin: 0; 
             overflow: hidden; 
-            background: black; 
+            background-image: url('assets/BG.jpg'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #0b0b2a; 
             height: 100vh;
             width: 100vw;
+            font-family: 'Arial Black', sans-serif;
         }
 
+        .name-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            z-index: 20;
+        }
+
+        /* The Grid Visualizer */
+        .grid-slot {
+            position: absolute;
+            background-color: rgba(255, 0, 0, 0.3); /* Semi-transparent red */
+            border: 1px solid red;                  
+            opacity: 1; /* Change to 0 to hide later! */
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* The Box that holds the name */
         .name-overlay {
             position: absolute;
-            white-space: nowrap;
-            font-family: 'Arial Black', sans-serif;
-            font-size: 60px; 
-            color: #ffffff;
-            text-shadow: 4px 4px 15px rgba(0,0,0,0.8);
-            transition: all 4s ease-in-out; 
-            display: inline-block;
-            pointer-events: none; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff; 
+            text-transform: uppercase;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 
+                         0 0 10px rgba(0, 150, 255, 0.8),
+                         0 0 20px rgba(160, 32, 240, 0.8);
+            
+            left: 0;
+            top: 0;
+            transform: translate(-50%, -50%) scale(0) rotate(0deg);
             opacity: 0;
+            pointer-events: none; 
         }
 
-        @keyframes popIn {
-            0% { transform: scale(0); opacity: 0; }
-            70% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
+        /* The actual text inside the box */
+        .name-text {
+            white-space: nowrap;
+            font-size: 20px;
+            transform-origin: center center;
         }
 
-        .animate-pop {
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        .state-grow {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(2.5) rotate(0deg);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease-out;
+            z-index: 100;
+        }
+
+        .state-move {
+            opacity: 1;
+            z-index: 20;
+            transition: left 4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        top 4s cubic-bezier(0.25, 1, 0.5, 1),
+                        transform 4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Smoothly fades out old names when they are replaced */
+        .state-fade-out {
+            opacity: 0 !important;
+            transition: opacity 0.5s ease-out !important;
         }
     </style>
 </head>
 <body>
 
+    <div id="nameWrapper" class="name-wrapper"></div>
+
     <script>
         const scriptUrl = 'https://script.google.com/macros/s/AKfycbxB5RPNS-JYkdSAqt-fEFrOzfE0LUvEBkS6octQoRbVctPRV2nq8Xpy2gziNNp1WH74/exec';
         let lastProcessedName = "";
+        
+        const maxNames = 100; 
+        const nameWrapper = document.getElementById('nameWrapper'); 
+        const slotData = [];
+        let activeElements = []; 
+        
+        let availableSlots = Array.from({length: maxNames}, (_, i) => i);
+        // Shuffle the slots so names appear randomly
+        for (let i = availableSlots.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [availableSlots[i], availableSlots[j]] = [availableSlots[j], availableSlots[i]];
+        }
 
+        // ==========================================
+        // 2. GENERATE PERFECT GRID & SKIP TOP 5 INNER
+        // ==========================================
+        function createGrid() {
+            const rows = 11; // 11 rows to stretch across the screen
+            const cols = 5;  // 5 uniform columns
+            
+            const halfWidth = window.innerWidth / 2;
+            const halfHeight = window.innerHeight / 2;
+
+            const minX = 260; // Inner edge (near QR/Text)
+            const maxX = halfWidth - 100; // Outer edge (with margin)
+            
+            const minY = -halfHeight + 60; // Top of screen
+            const maxY = halfHeight - 60;  // Bottom of screen
+
+            const stepX = (maxX - minX) / (cols - 1);
+            const stepY = (maxY - minY) / (rows - 1);
+
+            const uniformBoxWidth = stepX * 0.85;  
+            const uniformBoxHeight = stepY * 0.80; 
+
+            let slotIndex = 0;
+
+            // side 0 is Right, side 1 is Left
+            for (let side = 0; side < 2; side++) {
+                const isRightSide = (side === 0);
+                
+                for (let col = 0; col < cols; col++) {
+                    for (let row = 0; row < rows; row++) {
+                        
+                        // --- THE MAGIC LOGIC ---
+                        // If it is the innermost column (col 0) AND one of the top 5 rows (row 0 to 4)...
+                        // We skip it so it doesn't cover "UNITED FOR IMPACT"
+                        if (col === 0 && row < 5) {
+                            continue; 
+                        }
+
+                        if (slotIndex >= maxNames) break; // Safety check
+
+                        let finalX = minX + (col * stepX);
+                        let finalY = minY + (row * stepY);
+
+                        if (!isRightSide) { finalX = -finalX; }
+
+                        let angleRad = Math.atan2(finalY, finalX);
+                        let angleDeg = angleRad * (180 / Math.PI);
+
+                        // Keep text upright
+                        if (angleDeg > 90 || angleDeg < -90) { angleDeg += 180; }
+
+                        // Save dimensions 
+                        slotData[slotIndex] = { x: finalX, y: finalY, angle: angleDeg, w: uniformBoxWidth, h: uniformBoxHeight };
+
+                        // Draw the visual red box
+                        const boxEl = document.createElement('div');
+                        boxEl.className = 'grid-slot';
+                        boxEl.style.width = uniformBoxWidth + "px";
+                        boxEl.style.height = uniformBoxHeight + "px";
+                        boxEl.style.left = finalX + "px";
+                        boxEl.style.top = finalY + "px";
+                        boxEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg)`;
+                        nameWrapper.appendChild(boxEl);
+                        
+                        slotIndex++; // Move to the next spot
+                    }
+                }
+            }
+        }
+
+        createGrid();
+
+        // ==========================================
+        // 3. FETCH AND RESIZE NAMES TO FIT (WITH REPLACEMENT LOGIC)
+        // ==========================================
         async function checkForNewName() {
             try {
                 const response = await fetch(scriptUrl);
@@ -55,29 +192,61 @@
         }
 
         function createNewNameElement(name) {
+            let usedSlotIndex;
+
+            if (availableSlots.length > 0) {
+                usedSlotIndex = availableSlots.pop();
+            } else {
+                // If 100 spots are full, remove the oldest name
+                const oldestItem = activeElements.shift(); 
+                usedSlotIndex = oldestItem.slotIndex;      
+
+                oldestItem.el.classList.add('state-fade-out');
+                
+                setTimeout(() => {
+                    if(oldestItem.el.parentNode) {
+                        oldestItem.el.parentNode.removeChild(oldestItem.el);
+                    }
+                }, 500); 
+            }
+
+            const destination = slotData[usedSlotIndex];
+
             const nameEl = document.createElement('div');
-            nameEl.className = 'name-overlay animate-pop';
-            nameEl.innerText = name;
-            document.body.appendChild(nameEl);
+            nameEl.className = 'name-overlay';
+            nameEl.style.width = destination.w + "px";
+            nameEl.style.height = destination.h + "px";
+            
+            const textEl = document.createElement('span');
+            textEl.className = 'name-text';
+            textEl.innerText = name;
+            
+            nameEl.appendChild(textEl);
+            nameWrapper.appendChild(nameEl);
 
-            // Initial random position
-            const startX = Math.random() * (window.innerWidth - 300);
-            const startY = Math.random() * (window.innerHeight - 100);
-            nameEl.style.left = startX + 'px';
-            nameEl.style.top = startY + 'px';
+            activeElements.push({ el: nameEl, slotIndex: usedSlotIndex });
+            
+            void nameEl.offsetWidth; 
 
-            // Continuous movement - no clearInterval means this runs forever
-            setInterval(() => {
-                const maxX = window.innerWidth - nameEl.offsetWidth - 50;
-                const maxY = window.innerHeight - nameEl.offsetHeight - 50;
+            // Scale text down if it's too long
+            const textWidth = textEl.offsetWidth;
+            const maxAllowedWidth = destination.w * 0.95; 
+            
+            if (textWidth > maxAllowedWidth) {
+                const scaleDownRatio = maxAllowedWidth / textWidth;
+                textEl.style.transform = `scale(${scaleDownRatio})`;
+            }
 
-                const randomX = Math.max(50, Math.floor(Math.random() * maxX));
-                const randomY = Math.max(50, Math.floor(Math.random() * maxY));
+            nameEl.classList.add('state-grow');
 
-                nameEl.style.left = randomX + "px";
-                nameEl.style.top = randomY + "px";
-            }, 4000);
-        
+            setTimeout(() => {
+                nameEl.classList.remove('state-grow');
+                nameEl.classList.add('state-move');
+
+                nameEl.style.left = destination.x + "px";
+                nameEl.style.top = destination.y + "px";
+                nameEl.style.transform = `translate(-50%, -50%) scale(1) rotate(${destination.angle}deg)`;
+            }, 1500); 
         }
 
         setInterval(checkForNewName, 1000);
